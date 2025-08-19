@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
 import productRoutes from './routes/product';
+import orderRoutes from './routes/order';
 
 dotenv.config();
 
@@ -28,5 +29,6 @@ mongoose.connect(DB_ADDRESS)
   });
 
 app.use('/', productRoutes);
+app.use('/', orderRoutes);
 
 app.listen(3000, () => { console.log('Server started port 3000'); });

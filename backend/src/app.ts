@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import productRoutes from './routes/product';
 import orderRoutes from './routes/order';
+import {errorHandler} from './middlewares/error-handler';
+import NotFoundError from './errors/not-found-error';
 
 dotenv.config();
 
@@ -28,7 +30,14 @@ mongoose.connect(DB_ADDRESS)
     console.error('❌ Ошибка подключения к MongoDB:', err);
   });
 
-app.use('/', productRoutes);
-app.use('/', orderRoutes);
+app.use('/product', productRoutes);
+app.use('/order', orderRoutes);
+
+app.use((req, res, next) => {
+  next(new NotFoundError('Маршрут не найден'));
+});
+
+// централизованный обработчик ошибок
+app.use(errorHandler);
 
 app.listen(3000, () => { console.log('Server started port 3000'); });

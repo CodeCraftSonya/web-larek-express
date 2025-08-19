@@ -1,47 +1,52 @@
-import {Request, Response} from 'express';
+import {NextFunction, Request, Response} from 'express';
 import mongoose from 'mongoose';
 import {faker} from '@faker-js/faker';
-import validator from 'validator';
 import Product from '../models/product';
+import BadRequestError from '../errors/bad-request-error';
 
-export const createOrder = async (req: Request, res: Response) => {
+export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { items, total, payment, email, phone, address } = req.body;
 
     // ✅ Проверка обязательных полей
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ message: 'items должен быть непустым массивом' });
+      return next(new BadRequestError('items должен быть непустым массивом'));
     }
-    if (typeof total !== 'number') {
-      return res.status(400).json({ message: 'total обязателен и должен быть числом' });
+    if (!total || typeof total !== 'number') {
+      return next(new BadRequestError('total обязателен и должен быть числом'));
     }
     if (!['card', 'online'].includes(payment)) {
-      return res.status(400).json({ message: 'payment должен быть card или online' });
+      return next(new BadRequestError('payment должен быть card или online'));
     }
-    if (!email || !validator.isEmail(email)) {
-      return res.status(400).json({ message: 'Невалидный email' });
+    if (!email || !email.includes('@')) {
+      return next(new BadRequestError('Некорректный email'));
     }
-    if (!phone || !address) {
-      return res.status(400).json({ message: 'phone и address обязательны' });
+    if (!phone) {
+      return next(new BadRequestError('phone обязателен'));
     }
+    if (!address) {
+      return next(new BadRequestError('address обязателен'));
+    }
+
 
     const objectIds = items.map((id: string) => new mongoose.Types.ObjectId(id));
     const products = await Product.find({ _id: { $in: objectIds } });
-    // const products = await Product.find({ _id: { $in: items } });
+
 
     if (products.length !== items.length) {
-      return res.status(400).json({ message: 'Один или несколько товаров не найдены' });
+      return next(new BadRequestError('Один или несколько товаров не найдены'));
     }
 
-    const sum = products.reduce((acc, prod) => {
-      if (prod.price == null) {
-        throw new Error(`Товар ${prod.title} не продается`);
-      }
-      return acc + prod.price;
-    }, 0);
+    // Проверяем, что все товары продаются (price != null)
+    const notSellable = products.find(p => p.price == null);
+    if (notSellable) {
+      return next(new BadRequestError(`Товар "${notSellable.title}" не продается`));
+    }
 
+    // Проверка total
+    const sum = products.reduce((acc, p) => acc + (p.price || 0), 0);
     if (sum !== total) {
-      return res.status(400).json({ message: `total не совпадает с суммой товаров (${sum})` });
+      return next(new BadRequestError('total не совпадает с суммой товаров'));
     }
 
     // ✅ Создание ID заказа
@@ -53,6 +58,6 @@ export const createOrder = async (req: Request, res: Response) => {
     });
 
   } catch (err: any) {
-    res.status(400).json({ message: err.message || 'Ошибка создания заказа' });
+    next(err);
   }
 };

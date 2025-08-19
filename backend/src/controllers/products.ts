@@ -1,5 +1,7 @@
-import {Request, Response} from 'express';
+import {NextFunction, Request, Response} from 'express';
 import Product from '../models/product';
+import BadRequestError from '../errors/bad-request-error';
+import ConflictError from '../errors/conflict-error';
 
 // GET /product — получить все товары
 export const getProducts = async (req: Request, res: Response) => {
@@ -15,9 +17,18 @@ export const getProducts = async (req: Request, res: Response) => {
 };
 
 // POST /product — создать новый товар
-export const createProduct = async (req: Request, res: Response) => {
+export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, image, category, description, price } = req.body;
+
+    if (!title || title.length < 2 || title.length > 30) {
+      return next(new BadRequestError('Некорректное название товара'));
+    }
+
+    const existing = await Product.findOne({ title });
+    if (existing) {
+      return next(new ConflictError('Товар с таким title уже существует'));
+    }
 
     const newProduct = new Product({
       title,
@@ -30,9 +41,9 @@ export const createProduct = async (req: Request, res: Response) => {
     const savedProduct = await newProduct.save();
     res.status(201).json(savedProduct);
   } catch (err: any) {
-    if (err.code === 11000) { // дубликат уникального поля title
-      return res.status(400).json({ message: 'Товар с таким названием уже существует' });
+    if (err.message.includes('E11000')) {
+      return next(new ConflictError('Товар с таким названием уже существует'));
     }
-    res.status(500).json({ message: 'Ошибка при создании товара', error: err });
+    next(err);
   }
 };

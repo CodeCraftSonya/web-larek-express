@@ -6,9 +6,15 @@ import BadRequestError from '../errors/bad-request-error';
 
 const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { items, total, payment, email, phone, address } = req.body;
+    const {
+      items,
+      total,
+      payment,
+      email,
+      phone,
+      address,
+    } = req.body;
 
-    // ✅ Проверка обязательных полей
     if (!items || !Array.isArray(items) || items.length === 0) {
       return next(new BadRequestError('items должен быть непустым массивом'));
     }
@@ -28,35 +34,29 @@ const createOrder = async (req: Request, res: Response, next: NextFunction) => {
       return next(new BadRequestError('address обязателен'));
     }
 
-
     const objectIds = items.map((id: string) => new mongoose.Types.ObjectId(id));
     const products = await Product.find({ _id: { $in: objectIds } });
-
 
     if (products.length !== items.length) {
       return next(new BadRequestError('Один или несколько товаров не найдены'));
     }
 
-    // Проверяем, что все товары продаются (price != null)
-    const notSellable = products.find(p => p.price == null);
+    const notSellable = products.find((p) => p.price == null);
     if (notSellable) {
       return next(new BadRequestError(`Товар "${notSellable.title}" не продается`));
     }
 
-    // Проверка total
     const sum = products.reduce((acc, p) => acc + (p.price || 0), 0);
     if (sum !== total) {
       return next(new BadRequestError('total не совпадает с суммой товаров'));
     }
 
-    // ✅ Создание ID заказа
     const orderId = faker.string.uuid();
 
-    res.status(201).json({
+    res.status(200).json({
       id: orderId,
-      total
+      total,
     });
-
   } catch (err: any) {
     next(err);
   }

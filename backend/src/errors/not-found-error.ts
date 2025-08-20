@@ -1,4 +1,3 @@
-
 class NotFoundError extends Error {
   public statusCode: number;
 

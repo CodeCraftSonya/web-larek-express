@@ -1,11 +1,11 @@
-import {celebrate, Joi, Segments} from 'celebrate';
+import { celebrate, Joi, Segments } from 'celebrate';
 
 export const validateProductBody = celebrate({
   [Segments.BODY]: Joi.object().keys({
     title: Joi.string().min(2).max(30).required(),
     category: Joi.string().required(),
     description: Joi.string().required(),
-    price: Joi.number().allow(null), // товар может быть бесплатным
+    price: Joi.number().allow(null),
     image: Joi.object().keys({
       fileName: Joi.string().required(),
       originalName: Joi.string().required(),

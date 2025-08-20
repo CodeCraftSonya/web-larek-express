@@ -1,10 +1,10 @@
-import {NextFunction, Request, Response} from 'express';
+import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
-import {faker} from '@faker-js/faker';
+import { faker } from '@faker-js/faker';
 import Product from '../models/product';
 import BadRequestError from '../errors/bad-request-error';
 
-export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
+const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { items, total, payment, email, phone, address } = req.body;
 
@@ -61,3 +61,5 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     next(err);
   }
 };
+
+export default createOrder;

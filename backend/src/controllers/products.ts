@@ -1,25 +1,25 @@
-import {NextFunction, Request, Response} from 'express';
+import { NextFunction, Request, Response } from 'express';
 import Product from '../models/product';
 import BadRequestError from '../errors/bad-request-error';
 import ConflictError from '../errors/conflict-error';
 
-// GET /product — получить все товары
-export const getProducts = async (req: Request, res: Response) => {
+export const getProducts = async (_req: Request, res: Response) => {
   try {
     const products = await Product.find();
     res.json({
       items: products,
-      total: products.length
+      total: products.length,
     });
   } catch (err) {
     res.status(500).json({ message: 'Ошибка при получении товаров', error: err });
   }
 };
 
-// POST /product — создать новый товар
 export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, image, category, description, price } = req.body;
+    const {
+      title, image, category, description, price,
+    } = req.body;
 
     if (!title || title.length < 2 || title.length > 30) {
       return next(new BadRequestError('Некорректное название товара'));

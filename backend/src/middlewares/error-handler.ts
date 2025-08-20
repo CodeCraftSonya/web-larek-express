@@ -1,13 +1,15 @@
-import {NextFunction, Request, Response} from 'express';
+import { NextFunction, Request, Response } from 'express';
 
-export const errorHandler = (
+const errorHandler = (
   err: Error & { statusCode?: number },
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction,
 ) => {
   const status = err.statusCode || 500;
   const message = err.message || 'Внутренняя ошибка сервера';
 
   res.status(status).json({ message });
 };
+
+export default errorHandler;

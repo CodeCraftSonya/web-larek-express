@@ -14,26 +14,35 @@ export interface IProduct extends Document {
 const productSchema = new Schema<IProduct>({
   title: {
     type: String,
-    required: true,
     unique: true,
-    minlength: 2,
-    maxlength: 30,
+    required: [true, 'Поле "title" должно быть заполнено'],
+    minlength: [2, 'Минимальная длина поля "title" - 2'],
+    maxlength: [30, 'Максимальная длина поля "title" - 30'],
+    trim: true, // убирает пробелы в начале и конце
   },
   image: {
-    fileName: { type: String, required: true },
-    originalName: { type: String, required: true },
+    fileName: {
+      type: String,
+      required: [true, 'Поле "fileName" должно быть заполнено'],
+    },
+    originalName: {
+      type: String,
+      required: [true, 'Поле "originalName" должно быть заполнено'],
+    },
   },
   category: {
     type: String,
-    required: true,
+    required: [true, 'Поле "category" должно быть заполнено'],
   },
   description: {
     type: String,
+    default: '',
   },
   price: {
     type: Number,
     default: null,
+    min: [0, 'Цена не может быть отрицательной'],
   },
-});
+}, { versionKey: false });
 
 export default mongoose.model<IProduct>('product', productSchema);

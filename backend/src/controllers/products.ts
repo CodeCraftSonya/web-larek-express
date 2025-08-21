@@ -3,7 +3,7 @@ import Product from '../models/product';
 import BadRequestError from '../errors/bad-request-error';
 import ConflictError from '../errors/conflict-error';
 
-export const getProducts = async (_req: Request, res: Response) => {
+export const getProducts = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const products = await Product.find();
     res.json({
@@ -11,7 +11,7 @@ export const getProducts = async (_req: Request, res: Response) => {
       total: products.length,
     });
   } catch (err) {
-    res.status(500).json({ message: 'Ошибка при получении товаров', error: err });
+    next(err);
   }
 };
 
